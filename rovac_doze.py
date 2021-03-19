@@ -131,7 +131,6 @@ class Db:
             self.__con = connect(filepath)
         except Error as e:
             print(e)
-        self.__cursorObj = self.__con.cursor()
 
     def save_df(self, df):
         df.to_sql("vaccine_jabs", self.__con, index=False)
