@@ -81,17 +81,11 @@ def get_counties(df):
 
 
 def filter_data(df, date, county, category):
-    if date == "toate":
-        pass
-    else:
+    if date != "toate":
         df = df_filter(df, "Data vaccinării", date)
-    if county == "toate":
-        pass
-    else:
+    if county != "toate":
         df = df_filter(df, "Județ", county)
-    if category == "toate":
-        pass
-    else:
+    if category != "toate":
         df = df_filter(df, "Grupa de risc", cats[category])
     return [
         date,
