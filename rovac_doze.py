@@ -52,11 +52,12 @@ OfL+E98rab3bYg==
 excel_file = "vaccinare-covid19-grupe-risc-01-18.03.2021.xlsx"
 # path to folder where the excel file is located
 # & where .csv & .sqlite3 fieles will be saved
-working_dir = "/home/username/Downloads/"
+working_dir = "./"
 start_date = date(2021, 3, 1)
 end_date = date(2021, 3, 18)
 delta = timedelta(days=1)
-cats = {1: "Categoria I", 2: "Categoria a II-", 3: "Categoria a III-"}
+cats = {1: "Categoria I", 2: "Categoria a II-|Categoria a II a",
+        3: "Categoria a III-|Categoria a III a"}
 
 
 def get_dates():
@@ -80,16 +81,16 @@ def get_counties(df):
     return df["Județ"].dropna().unique().tolist()
 
 
-def filter_data(df, date, county, category):
-    if date != "toate":
-        df = df_filter(df, "Data vaccinării", date)
+def filter_data(df, county, date, category):
     if county != "toate":
         df = df_filter(df, "Județ", county)
+    if date != "toate":
+        df = df_filter(df, "Data vaccinării", date)
     if category != "toate":
         df = df_filter(df, "Grupa de risc", cats[category])
     return [
-        date,
         county,
+        date,
         category,
         df_sum(df, "Doze administrate"),
         df_sum(df_filter(df, "Produs", "astra"), "Doze administrate"),
@@ -100,18 +101,18 @@ def filter_data(df, date, county, category):
 
 def compute_stats(df):
     stats = []
-    dates = get_dates() + ["toate"]
     counties = get_counties(df) + ["toate"]
-    for date in dates:
-        print(date)
-        for county in counties:
+    dates = get_dates() + ["toate"]
+    for county in counties:
+        print(county)
+        for date in dates:
             stats += [
-                filter_data(df, date, county, 1),
-                filter_data(df, date, county, 2),
-                filter_data(df, date, county, 3),
-                filter_data(df, date, county, "toate"),
+                filter_data(df, county, date, 1),
+                filter_data(df, county, date, 2),
+                filter_data(df, county, date, 3),
+                filter_data(df, county, date, "toate"),
             ]
-    return DataFrame(stats, columns=["data", "judet", "categorie_pers",
+    return DataFrame(stats, columns=["judet", "data", "categorie_pers",
                                      "total_doze", "astra", "pfizer",
                                      "moderna"])
 
