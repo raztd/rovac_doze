@@ -170,7 +170,7 @@ def check_vaccine_types(df):
         print("OK!")
     else:
         print(new_df)
-        raise("there is a new type of vaccine. please adjust the script")
+        raise ValueError("there is a new type of vaccine. please adjust the script")
 
 
 def run():
