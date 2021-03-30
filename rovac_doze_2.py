@@ -3,7 +3,7 @@ from pandas import read_csv, read_excel, DataFrame
 
 excel_file = "vaccinare-covid19-grupe-risc-01-23.03.2021.xlsx"
 # path to folder where the excel file is located
-# & where .csv & .sqlite3 fieles will be saved
+# & where .csv & .sqlite3 files will be saved
 working_dir = "./"
 '''
 script to analyze "transparenta covid-19" [0] data
