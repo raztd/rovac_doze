@@ -1,7 +1,7 @@
 from sqlite3 import Error, connect
 from pandas import read_csv, read_excel, DataFrame
 
-excel_file = "vaccinare-covid19-grupe-risc-01-23.03.2021.xlsx"
+excel_file = "vaccinare-covid19-grupe-risc-01-31.03.2021.xlsx"
 # path to folder where the excel file is located
 # & where .csv & .sqlite3 files will be saved
 working_dir = "./"
@@ -64,8 +64,12 @@ cats = {1: "Categoria I", 2: "Categoria a II-|Categoria a II a",
         3: "Categoria a III-|Categoria a III a"}
 
 
-def df_filter(df, column, string):
-    return df[df[column].str.contains(string, case=False, na=False)]
+def df_filter_contains(df, column, value):
+    return df[df[column].str.contains(value, case=False, na=False)]
+
+
+def df_filter_equals(df, column, value):
+    return df[df[column] == value]
 
 
 def unique_values_from_column(df, column):
@@ -89,21 +93,23 @@ def get_stats(df, county, locality, center, date, category):
         date,
         category,
         df_sum(df, DOSES_COL),
-        df_sum(df_filter(df, VACCINE_COL, "astra"), DOSES_COL),
-        df_sum(df_filter(df, VACCINE_COL, "pfizer"), DOSES_COL),
-        df_sum(df_filter(df, VACCINE_COL, "moderna"), DOSES_COL)]
+        df_sum(df_filter_contains(df, VACCINE_COL, "astra"), DOSES_COL),
+        df_sum(df_filter_contains(df, VACCINE_COL, "pfizer"), DOSES_COL),
+        df_sum(df_filter_contains(df, VACCINE_COL, "moderna"), DOSES_COL)]
 
 
 def compute_stats(df):
     stats = []
     dates = get_dates(df)
     counties = unique_values_from_column(df, COUNTY_COL)
+    x = 1
     for county in counties:
-        print(county)
-        df_county = df_filter(df, COUNTY_COL, county)
+        print(f"{x} - {county}")
+        x += 1
+        df_county = df_filter_equals(df, COUNTY_COL, county)
         localities = unique_values_from_column(df_county, LOCALITY_COL)
         for locality in localities:
-            df_locality = df_filter(df_county, LOCALITY_COL, locality)
+            df_locality = df_filter_equals(df_county, LOCALITY_COL, locality)
             centers = unique_values_from_column(df_locality, CENTER_COL)
             stats += all_centers(df_locality, county,
                                  locality, centers, cats, dates)
@@ -118,7 +124,7 @@ def compute_stats(df):
 def all_centers(df, county, locality, centers, categories, dates):
     lst = []
     for center in centers:
-        df_center = df[df[CENTER_COL] == center]
+        df_center = df_filter_equals(df, CENTER_COL, center)
         lst += all_cats(df_center, county, locality, center, categories, dates)
     lst += all_cats(df, county, locality, "toate", categories, dates)
     return lst
@@ -127,7 +133,7 @@ def all_centers(df, county, locality, centers, categories, dates):
 def all_cats(df, county, locality, center, categories, dates):
     lst = []
     for category in categories:
-        df_cat = df_filter(df, CATEGORY_COL, cats[category])
+        df_cat = df_filter_contains(df, CATEGORY_COL, cats[category])
         lst += all_dates(df_cat, county, locality, center, category, dates)
     lst += all_dates(df, county, locality, center, "toate", dates)
     return lst
@@ -136,7 +142,7 @@ def all_cats(df, county, locality, center, categories, dates):
 def all_dates(df, county, locality, center, category, dates):
     lst = []
     for date in dates:
-        df_date = df_filter(df, DATE_COL, date)
+        df_date = df_filter_contains(df, DATE_COL, date)
         lst.append(get_stats(df_date, county, locality, center, category, date))
     lst.append(get_stats(df, county, locality, center, category, "toate"))
     return lst
@@ -170,7 +176,8 @@ def check_vaccine_types(df):
         print("OK!")
     else:
         print(new_df)
-        raise ValueError("there is a new type of vaccine. please adjust the script")
+        raise ValueError(
+            "there is a new type of vaccine. please adjust the script")
 
 
 def run():
@@ -181,7 +188,6 @@ def run():
     print("Analyzing data... ")
     stats = compute_stats(df)
     print("Save stats to files")
-    write_to_csv(stats, f"{working_dir}{excel_file}_2.csv")
     db = Db(f"{working_dir}{excel_file}_2.sqlite3")
     db.save_df(stats)
 
